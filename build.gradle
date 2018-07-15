@@ -1,0 +1,69 @@
+group 'com.test'
+version '1.0'
+
+apply plugin: 'java'
+apply plugin: 'war'
+apply plugin: 'idea'
+apply plugin: 'maven'
+apply plugin: 'org.akhikhl.gretty'
+
+sourceCompatibility = 1.8
+targetCompatibility = 1.8
+
+repositories {
+    mavenCentral()
+}
+buildscript {
+    repositories {
+        mavenCentral()
+    }
+
+    dependencies{
+        classpath 'org.akhikhl.gretty:gretty:2.0.0' //这个插件的定义不是compile也不是testCompile而是classpath，
+                                                    //就是叫你在编译整个构建的过程中可以寻找到这个插件，但是并不打包到最终到发布包中，
+                                                    //因为这个插件本身就是运行活着在开发当中用到的，真正运行的时候肯定是部署到真正到tomcat上
+
+    }
+
+}
+
+if (!project.plugins.findPlugin(org.akhikhl.gretty.GrettyPlugin)) //如果找不到这个插件，就去加载这个插件
+    project.apply(plugin: org.akhikhl.gretty.GrettyPlugin)
+
+dependencies {
+
+//    compile 'org.springframework:spring-context:4.2.6.RELEASE'
+//    compile 'joda-time:joda-time:2.10'
+    compile(
+            'org.springframework:spring-context:4.2.6.RELEASE',
+            'joda-time:joda-time:2.10'
+
+    )
+    providedCompile(
+            'javax.servlet:javax.servlet-api:3.1.0'
+
+    )
+    testCompile('junit:junit:4.12')
+
+}
+
+tasks.withType(JavaCompile){
+    options.encoding = 'UTF-8' //Java编译的时候使用utf-8
+}
+[compileJava,javadoc,compileTestJava]*.options*.encoding = 'UTF-8'
+
+gretty{
+    httpEnabled = true
+    servletContainer = "tomcat8"
+    contextPath ="/mygradle" //运行到上下文路径
+    host ="localhost"
+    httpPort =8080
+    scanInterval = 1 //每一个一秒钟启动一个线程，每一个一秒钟去扫描当前目录，有文件变化就启动服务器
+    fastReload = true
+    inplaceMode = "soft"
+    loggingLevel ="DEBUG"
+    consoleLogEnabled = true //启动命令行到日志
+
+    debugPort =6005//调试端口
+    debugSuspend = true //如果进入调试到时候，是不是会挂起
+ }
